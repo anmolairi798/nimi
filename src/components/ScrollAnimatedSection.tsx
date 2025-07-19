@@ -1,97 +1,93 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useSectionBasedVisibility, useScrollDirection, useEnhancedScrollVisibility } from '../hooks/useScrollDirection';
+import { useEnhancedScrollVisibility, useScrollDirection } from '../hooks/useScrollDirection';
 
 interface ScrollAnimatedSectionProps {
   children: React.ReactNode;
+  className?: string;
   direction?: 'left' | 'right' | 'up' | 'down' | 'fade' | 'scale';
   delay?: number;
   duration?: number;
   threshold?: number;
   id?: string;
-  sectionId?: string; // Section ID for section-based visibility
-  enhancedScrollDown?: boolean; // Enable enhanced scroll-down visibility
+  sectionId?: string;
 }
 
 const ScrollAnimatedSection: React.FC<ScrollAnimatedSectionProps> = ({
   children,
+  className = '',
   direction = 'up',
   delay = 0,
-  duration = 0.8,
-  threshold = 0.1,
+  duration = 0.6,
+  threshold = 0.03,
   id,
-  sectionId = '', // Section ID for visibility control
-  enhancedScrollDown = true // Enable enhanced scroll-down by default
+  sectionId = ''
 }) => {
-  // Use enhanced scroll visibility if enabled, otherwise use section-based
-  const [ref, isVisible, isActive, hasBeenVisible] = enhancedScrollDown 
-    ? useEnhancedScrollVisibility(threshold * 0.5) // Lower threshold for enhanced mode
-    : useSectionBasedVisibility(sectionId || id || '', threshold);
-    
+  const [ref, isVisible, isActive, hasBeenVisible] = useEnhancedScrollVisibility(threshold);
   const { scrollDirection } = useScrollDirection();
 
   const getAnimationState = () => {
-    if (isActive) {
-      // Fully active state
+    if (hasBeenVisible) {
+      // Once visible, maintain high visibility
       return {
         x: 0,
         y: 0,
-        opacity: isVisible ? (isActive ? 1 : 0.98) : 0.4, // Better visibility retention
-        scale: isVisible ? (isActive ? 1 : 0.995) : 0.98, // Subtle scale change
+        opacity: isVisible ? (isActive ? 1 : 0.95) : 0.6,
+        scale: isVisible ? (isActive ? 1 : 0.998) : 0.98,
         filter: 'blur(0px)',
         rotateX: 0,
         rotateY: 0
       };
     }
 
-    if (!isVisible && !hasBeenVisible) {
-      // Initial hidden state
-      const exitDistance = scrollDirection === 'down' ? 20 : 40; // Smaller distance for scroll down
-      const exitVariants = {
+    if (!isVisible) {
+      // Initial hidden state with scroll direction consideration
+      const distance = scrollDirection === 'down' ? 15 : 30;
+      const variants = {
         left: { 
-          x: -exitDistance,
-          opacity: scrollDirection === 'down' ? 0.3 : 0.1, // Better initial opacity for scroll down
-          scale: 0.95,
-          filter: 'blur(2px)'
+          x: -distance,
+          opacity: scrollDirection === 'down' ? 0.4 : 0.2,
+          scale: 0.96,
+          filter: 'blur(1px)'
         },
         right: { 
-          x: exitDistance,
-          opacity: 0.2,
-          scale: 0.95,
-          filter: 'blur(2px)'
+          x: distance,
+          opacity: scrollDirection === 'down' ? 0.4 : 0.2,
+          scale: 0.96,
+          filter: 'blur(1px)'
         },
         up: { 
-          y: exitDistance,
-          opacity: scrollDirection === 'down' ? 0.3 : 0.1,
-          scale: 0.95,
-          filter: 'blur(2px)'
+          y: distance,
+          opacity: scrollDirection === 'down' ? 0.4 : 0.2,
+          scale: 0.96,
+          filter: 'blur(1px)'
         },
         down: { 
-          y: -exitDistance,
-          opacity: 0.2,
-          scale: 0.95,
-          filter: 'blur(2px)'
+          y: -distance,
+          opacity: scrollDirection === 'down' ? 0.4 : 0.2,
+          scale: 0.96,
+          filter: 'blur(1px)'
         },
         fade: { 
-          opacity: 0.1,
+          opacity: scrollDirection === 'down' ? 0.3 : 0.1,
           scale: 0.98,
           filter: 'blur(1px)'
         },
         scale: { 
-          scale: 0.9,
-          opacity: 0.2,
+          scale: 0.92,
+          opacity: scrollDirection === 'down' ? 0.3 : 0.1,
           filter: 'blur(1px)'
         }
       };
-      return exitVariants[direction];
+      return variants[direction];
     }
 
-    // Entry/visible animations
+    // Visible state
     return {
       x: 0,
       y: 0,
-      opacity: isVisible ? (isActive ? 1 : 0.97) : 0.4, // Better visibility
-      scale: isActive ? 1 : 0.998, // Minimal scale change
+      opacity: isActive ? 1 : 0.95,
+      scale: isActive ? 1 : 0.999,
       filter: 'blur(0px)',
       rotateX: 0,
       rotateY: 0
@@ -99,33 +95,32 @@ const ScrollAnimatedSection: React.FC<ScrollAnimatedSectionProps> = ({
   };
 
   const getInitialState = () => {
-    const baseDistance = scrollDirection === 'down' ? 40 : 60; // Smaller initial distance for scroll down
+    const baseDistance = scrollDirection === 'down' ? 25 : 50;
     const variants = {
-      left: { x: -baseDistance, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-      right: { x: baseDistance, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-      up: { y: baseDistance, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-      down: { y: -baseDistance, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-      fade: { opacity: 0, scale: 0.95, filter: 'blur(3px)' },
-      scale: { scale: 0.8, opacity: 0, filter: 'blur(3px)' }
+      left: { x: -baseDistance, opacity: 0, scale: 0.9, filter: 'blur(3px)' },
+      right: { x: baseDistance, opacity: 0, scale: 0.9, filter: 'blur(3px)' },
+      up: { y: baseDistance, opacity: 0, scale: 0.9, filter: 'blur(3px)' },
+      down: { y: -baseDistance, opacity: 0, scale: 0.9, filter: 'blur(3px)' },
+      fade: { opacity: 0, scale: 0.95, filter: 'blur(2px)' },
+      scale: { scale: 0.8, opacity: 0, filter: 'blur(2px)' }
     };
     return variants[direction];
   };
 
-  const animationState = getAnimationState();
-
   return (
     <motion.div
       ref={ref}
+      className={className}
       id={id}
       initial={getInitialState()}
-      animate={animationState}
+      animate={getAnimationState()}
       transition={{
-        duration: hasBeenVisible ? 0.4 : (scrollDirection === 'down' ? duration * 0.8 : duration), // Faster for scroll down
-        delay: hasBeenVisible ? 0 : delay,
+        duration: hasBeenVisible ? 0.3 : (scrollDirection === 'down' ? duration * 0.7 : duration),
+        delay: hasBeenVisible ? 0 : (scrollDirection === 'down' ? delay * 0.5 : delay),
         ease: [0.25, 0.46, 0.45, 0.94],
         type: "spring",
-        stiffness: hasBeenVisible ? 200 : (scrollDirection === 'down' ? 120 : 100), // More responsive for scroll down
-        damping: hasBeenVisible ? 30 : (scrollDirection === 'down' ? 22 : 20)
+        stiffness: hasBeenVisible ? 250 : (scrollDirection === 'down' ? 150 : 120),
+        damping: hasBeenVisible ? 35 : (scrollDirection === 'down' ? 25 : 22)
       }}
     >
       {children}
